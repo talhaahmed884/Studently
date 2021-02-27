@@ -3,7 +3,7 @@ package com.Studently;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-public class TeacherDBHandler implements StudentTeacherDBHandler{
+public class TeacherDBHandler implements StudentTeacherDBHandler<Teacher> {
     private final Database database;
 
     public TeacherDBHandler() {
@@ -21,7 +21,11 @@ public class TeacherDBHandler implements StudentTeacherDBHandler{
             ResultSet result = ps.executeQuery();
 
             if (result.next()) {
-                return result.getString(1);
+                String password = result.getString(1);
+                ps.close();
+                result.close();
+                database.closeConnection();
+                return password;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -39,7 +43,11 @@ public class TeacherDBHandler implements StudentTeacherDBHandler{
             PreparedStatement ps = database.getConnection().prepareStatement(query);
             ResultSet result = ps.executeQuery();
             if (result.next()) {
-                return result.getInt(1);
+                int message = result.getInt(1);
+                ps.close();
+                result.close();
+                database.closeConnection();
+                return message;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -48,20 +56,21 @@ public class TeacherDBHandler implements StudentTeacherDBHandler{
     }
 
     @Override
-    public void add(Object person, String password) {
-        Teacher teacher = (Teacher) person;
+    public void add(Teacher teacher, String password) {
         String query = "Use Studently EXEC SMS.Insert_Teacher '" + teacher.getEmail() + "','" + teacher.getFName() + "', '" + teacher.getLName() + "' , '" + password + "', '" + teacher.getUniversity() + "', '" + teacher.getOffice() + "', '" + teacher.getCourse() + "'";
 
         try {
             PreparedStatement ps = database.getConnection().prepareStatement(query);
             ps.execute();
+            ps.close();
+            database.closeConnection();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public Object get(String email) {
+    public Teacher get(String email) {
         Teacher newTeacher = Teacher.getInstance();
 
         String query = "Select Email, Fname, Lname, University, Office, Course from Studently.SMS.Teacher where Email = '" + email + "'";
@@ -76,6 +85,7 @@ public class TeacherDBHandler implements StudentTeacherDBHandler{
                 newTeacher.setUniversity(result.getString("University"));
                 newTeacher.setOffice(result.getString("Office"));
                 newTeacher.setCourse(result.getString("Course"));
+                ps.close();
                 result.close();
                 database.closeConnection();
                 return newTeacher;
